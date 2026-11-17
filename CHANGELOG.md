@@ -2,7 +2,7 @@
 
 Notable changes to this plugin. Versions match the release tags.
 
-## Unreleased
+## 1.2.0
 
 ### Added
 
