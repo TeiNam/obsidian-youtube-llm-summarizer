@@ -62,7 +62,7 @@ Click the YouTube icon in the left ribbon, or run **Open sidebar** from the comm
 - **Single summary**: Paste a YouTube link and press Enter or click **Summarize**. The view shows each stage (extracting captions → translating → summarizing → creating the note), and when it finishes, the **Open note** link opens the new note.
 - **Script / transcript**: Paste a transcript to summarize it directly. This section opens automatically when the captions cannot be fetched from YouTube.
 - **Bulk summarize (multiple links)**: Enter one link per line and they are summarized in order. While it runs you can **Stop after current video**, and when it ends you see the reason for each failed link. Failed or unprocessed links and lines that are not YouTube links stay in the input.
-- **Status panel**: Below the tab you see the AI provider and model used for summaries, the subscription feed status (Ready / YouTube Data API key required / No channels added), the number of groups, the number of channels, and the channel list. If the current settings cannot run a summary, the reason is shown here too. The panel refreshes whenever settings are saved.
+- **Status panel**: Below the tab you see the AI provider and model used for summaries, the subscription feed status (Ready / YouTube Data API key required / No channels added), the number of groups, the number of channels, and the channel list (ordered by group, then by the order added; ungrouped channels last). If the current settings cannot run a summary, the reason is shown here too. The panel refreshes whenever settings are saved.
 
 ### Subscription feed tab
 

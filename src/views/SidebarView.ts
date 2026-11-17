@@ -8,7 +8,7 @@ import { ItemView, WorkspaceLeaf, Notice, App, TFile, setIcon } from "obsidian";
 import { validateYouTubeUrl } from "../utils/YouTubeUrlValidator";
 import { SummarizerService } from "../services/SummarizerService";
 import { getAiConfigurationError } from "../services/AiModelClient";
-import { AI_MODEL_FIELDS, AI_PROVIDER_LABELS, PluginSettings, SummaryStage } from "../models/types";
+import { AI_MODEL_FIELDS, AI_PROVIDER_LABELS, MonitoredChannel, PluginSettings, SummaryStage } from "../models/types";
 import { Language, t, Translations } from "../i18n";
 import { SubscriptionManager } from "../services/SubscriptionManager";
 import { FeedView } from "./FeedView";
@@ -373,7 +373,13 @@ export class SidebarView extends ItemView {
     }
     if (channels.length) {
       const listEl = this.infoEl.createEl("ul", { cls: "youtube-summarizer-info-channels" });
-      for (const channel of channels) {
+      // 피드 탭과 같은 순서: 그룹이 처음 등록된 순, 그룹 안에서는 등록순, 그룹 없음은 맨 뒤
+      const groupOrder = [...new Set(channels.map((channel) => channel.group?.trim() ?? "").filter(Boolean))];
+      const rank = (channel: MonitoredChannel): number => {
+        const index = groupOrder.indexOf(channel.group?.trim() ?? "");
+        return index < 0 ? groupOrder.length : index;
+      };
+      for (const channel of [...channels].sort((a, b) => rank(a) - rank(b))) {
         const itemEl = listEl.createEl("li", { text: channel.channelTitle });
         const group = channel.group?.trim();
         if (group) itemEl.createSpan({ text: group, cls: "youtube-summarizer-info-channel-group" });

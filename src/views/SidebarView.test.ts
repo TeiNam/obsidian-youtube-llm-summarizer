@@ -614,7 +614,7 @@ describe("SidebarView", () => {
         ...DEFAULT_SETTINGS,
         bedrockBearerToken: "test-key",
         youtubeDataApiKey: "data-key",
-        monitoredChannels: [channel("UC1", "주식"), channel("UC2", " 주식 "), channel("UC3", "스터디"), channel("UC4")],
+        monitoredChannels: [channel("UC1", "주식"), channel("UC4"), channel("UC3", "스터디"), channel("UC2", " 주식 ")],
       };
       view.setDependencies({ summarize: vi.fn() } as unknown as SummarizerService, () => settings);
       await view.onOpen();
@@ -630,7 +630,7 @@ describe("SidebarView", () => {
         [tr.infoGroupsLabel]: "2",
         [tr.infoChannelsLabel]: "4",
       });
-      // 그룹 수가 채널 수보다 위에 오고, 채널은 그룹명과 함께 목록으로 나열한다.
+      // 그룹 수가 채널 수보다 위에 오고, 채널은 그룹순 → 등록순으로 나열하며 그룹 없는 채널은 맨 뒤다.
       expect(Object.keys(info()).slice(-2)).toEqual([tr.infoGroupsLabel, tr.infoChannelsLabel]);
       expect(Array.from(view.contentEl.querySelectorAll(".youtube-summarizer-info-channels li"), (li) => li.textContent))
         .toEqual(["UC1주식", "UC2주식", "UC3스터디", "UC4"]);
