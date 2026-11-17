@@ -150,7 +150,7 @@ Keys that an earlier build saved in `data.json` as plain text are moved to secre
 
 Languages that differ only by region, such as `ko` and `ko-KR`, are treated as the same, while Simplified and Traditional Chinese are kept distinct. A pasted transcript has no language information, so it goes through the translation step.
 
-The translation and summary prompts live in `src/prompts/` and are bundled into `main.js`. They detect the genre, follow study-note instructions, and produce six sections such as `===GENRE===` that the plugin parses into the note. Summaries in languages other than Korean keep the same structure with an added output-language instruction.
+The translation and summary prompts live in `src/prompts/` and are bundled into `main.js`. They detect the genre, follow study-note instructions, and produce six sections such as `===GENRE===` that the plugin parses into the note. Summaries in languages other than Korean keep the same structure with an added output-language instruction. The note's fixed section headings follow the summary language for Korean, Japanese, Simplified Chinese, and Traditional Chinese, and are English for every other language.
 
 When automatic captions appear varies by video, and there is no guarantee they are generated within a day. If captions are missing or incomplete, the plugin does not fall back to speech recognition; it tells you to retry or paste a transcript. You can also use **Script / transcript** when YouTube throttles requests or requires login or age verification. If the video information cannot be fetched in that case, the video ID is used as the title.
 
@@ -162,7 +162,7 @@ Caption collection depends on YouTube's public player response, so it can be aff
 |------|------|
 | Maximum input characters | Default 200,000. If the captions or translation exceed it, the run stops; text is never silently cut |
 | Maximum output tokens per call | Default 65,536. Adjust within the output limit your model supports |
-| Summary language | Default Korean. Set independently of the UI language |
+| Summary language | Default Korean. Set independently of the UI language. Sets the language of the note body and, for Korean, Japanese, and Chinese, its section headings (English otherwise) |
 | YouTube Data API key | For adding channels and the latest-video feed. Not needed to summarize a URL directly |
 | Save folder / Subscription save folder | Where regular and feed summaries are saved |
 | Channel save folder / Group | Per-channel save location and feed group |
