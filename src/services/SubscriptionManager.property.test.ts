@@ -3,7 +3,7 @@
 // fast-check 라이브러리를 사용한 구독 관리 로직 검증
 // - Property 9: Uploads 플레이리스트 ID 도출
 // - Property 5: 채널별 영상 그룹화
-// - Property 1: API 응답 무필터 반환 (latest-videos-feed)
+// - Property 1: 쇼츠가 없으면 업로드 목록을 순서대로 반환 (latest-videos-feed)
 // ============================================================
 
 import { describe, it, expect, vi } from "vitest";
@@ -167,7 +167,8 @@ describe("Feature: youtube-subscription-feed, Property 5: 채널별 영상 그�
 
 
 // ============================================================
-// Property 1: API 응답 무필터 반환 (latest-videos-feed)
+// Property 1: 쇼츠가 없으면 업로드 목록을 순서대로 반환 (latest-videos-feed)
+// 쇼츠 재생목록(UUSH…) 조회는 이 목에서 빈 목록을 돌려준다
 // ============================================================
 
 /**
@@ -182,7 +183,7 @@ function monitoredChannelArbitrary(channelId: string): fc.Arbitrary<MonitoredCha
   });
 }
 
-describe("Feature: latest-videos-feed, Property 1: API 응답 무필터 반환", () => {
+describe("Feature: latest-videos-feed, Property 1: 쇼츠가 없으면 업로드 목록을 순서대로 반환", () => {
   /**
    * Validates: Requirements 1.1, 1.2, 2.2, 2.3
    *
@@ -191,12 +192,12 @@ describe("Feature: latest-videos-feed, Property 1: API 응답 무필터 반환",
    * API 클라이언트가 반환한 영상 목록과 정확히 동일해야 한다
    * (필터링이나 누락 없이).
    */
-  it("fetchNewVideos()는 API 클라이언트가 반환한 영상을 필터링 없이 그대로 반환한다", async () => {
+  it("fetchNewVideos()는 쇼츠가 없는 채널의 업로드 영상을 videosPerChannel개까지 순서대로 반환한다", async () => {
     await fc.assert(
       fc.asyncProperty(
         // 1~5개의 고유 채널 ID 생성
         fc.array(
-          fc.string({ minLength: 3, maxLength: 20 }).map((s) => `UC${s}`),
+          fc.string({ minLength: 3, maxLength: 20 }).filter((s) => !s.startsWith("SH")).map((s) => `UC${s}`),
           { minLength: 1, maxLength: 5 }
         ).chain((channelIds) => {
           // 중복 제거
@@ -256,8 +257,8 @@ describe("Feature: latest-videos-feed, Property 1: API 응답 무필터 반환",
           // 검증: 각 결과 채널의 영상 목록이 API 응답과 정확히 동일한지 확인
           for (const result of results) {
             const expected = expectedByChannel.get(result.channelId) ?? [];
-            // 영상 목록이 정확히 동일해야 한다 (필터링이나 누락 없이)
-            expect(result.videos).toEqual(expected);
+            // 앞에서부터 videosPerChannel개가 순서 그대로 나와야 한다
+            expect(result.videos).toEqual(expected.slice(0, videosPerChannel));
           }
 
           // 검증: 영상이 있는 채널은 모두 결과에 포함되어야 한다
@@ -282,10 +283,10 @@ describe("Feature: latest-videos-feed, Property 1: API 응답 무필터 반환",
 
 
 // ============================================================
-// Property 2: maxResults에 videosPerChannel 전달 (latest-videos-feed)
+// Property 2: 채널마다 업로드·쇼츠 목록을 한 번씩 조회 (latest-videos-feed)
 // ============================================================
 
-describe("Feature: latest-videos-feed, Property 2: maxResults에 videosPerChannel 전달", () => {
+describe("Feature: latest-videos-feed, Property 2: 채널마다 업로드·쇼츠 목록을 한 번씩 조회", () => {
   /**
    * Validates: Requirements 1.3, 3.3
    *
@@ -294,14 +295,14 @@ describe("Feature: latest-videos-feed, Property 2: maxResults에 videosPerChanne
    * 전달되는 maxResults 인자는 settings.videosPerChannel 값과
    * 정확히 일치해야 한다.
    */
-  it("fetchNewVideos() 호출 시 각 채널의 fetchRecentVideos에 전달되는 maxResults는 videosPerChannel과 정확히 일치한다", async () => {
+  it("fetchNewVideos()는 채널마다 업로드 목록과 쇼츠 목록을 한 페이지(50개)씩 조회한다", async () => {
     await fc.assert(
       fc.asyncProperty(
         // 1~10 범위의 랜덤 videosPerChannel 값
         fc.integer({ min: 1, max: 10 }),
         // 1~5개의 고유 채널 ID 생성
         fc.array(
-          fc.string({ minLength: 3, maxLength: 20 }).map((s) => `UC${s}`),
+          fc.string({ minLength: 3, maxLength: 20 }).filter((s) => !s.startsWith("SH")).map((s) => `UC${s}`),
           { minLength: 1, maxLength: 5 }
         ).map((ids) => [...new Set(ids)]).filter((ids) => ids.length >= 1),
         async (videosPerChannel, uniqueChannelIds) => {
@@ -331,13 +332,16 @@ describe("Feature: latest-videos-feed, Property 2: maxResults에 videosPerChanne
           await manager.fetchNewVideos();
 
           // 검증: fetchRecentVideos가 각 채널에 대해 호출되었는지 확인
-          expect(fetchRecentVideosMock).toHaveBeenCalledTimes(uniqueChannelIds.length);
+          expect(fetchRecentVideosMock).toHaveBeenCalledTimes(uniqueChannelIds.length * 2);
+          expect(fetchRecentVideosMock.mock.calls.map((call) => call[0])).toEqual(
+            uniqueChannelIds.flatMap((id) => [`UU${id.slice(2)}`, `UUSH${id.slice(2)}`])
+          );
 
-          // 검증: 각 호출의 두 번째 인자(maxResults)가 videosPerChannel과 정확히 일치하는지 확인
+          // 검증: 쇼츠를 빼고도 videosPerChannel개를 채울 수 있게 항상 한 페이지 최대치를 요청한다
           for (let i = 0; i < fetchRecentVideosMock.mock.calls.length; i++) {
             const callArgs = fetchRecentVideosMock.mock.calls[i];
             const passedMaxResults = callArgs[1];
-            expect(passedMaxResults).toBe(videosPerChannel);
+            expect(passedMaxResults).toBe(50);
           }
         }
       ),
@@ -364,7 +368,7 @@ describe("Feature: latest-videos-feed, Property 4: 개별 채널 실패 시 격�
       fc.asyncProperty(
         // 2~5개의 고유 채널 ID 생성
         fc.array(
-          fc.string({ minLength: 3, maxLength: 20 }).map((s) => `UC${s}`),
+          fc.string({ minLength: 3, maxLength: 20 }).filter((s) => !s.startsWith("SH")).map((s) => `UC${s}`),
           { minLength: 2, maxLength: 5 }
         )
           .map((ids) => [...new Set(ids)])
@@ -441,8 +445,8 @@ describe("Feature: latest-videos-feed, Property 4: 개별 채널 실패 시 격�
             if (expectedVideos.length > 0) {
               const found = results.find((r) => r.channelId === channelId);
               expect(found).toBeDefined();
-              // 성공한 채널의 영상 내용이 API 응답과 동일해야 한다
-              expect(found!.videos).toEqual(expectedVideos);
+              // 성공한 채널의 영상은 API 응답 순서 그대로 videosPerChannel개까지 나와야 한다
+              expect(found!.videos).toEqual(expectedVideos.slice(0, videosPerChannel));
             }
           }
 
