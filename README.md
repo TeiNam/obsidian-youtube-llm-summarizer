@@ -27,7 +27,8 @@ It works without a separate summary server, Python, yt-dlp, audio downloads, or 
 - One-line summary, details, key insights, keywords, and topics for further exploration
 - Chunked translation for long captions, with input limits and truncation checks
 - Sequential bulk summaries that keep failed links for retry
-- Subscription feed with channel groups, per-channel save folders, and a "summarized" marker
+- Subscription feed with channel groups, per-channel save folders, and a "summarized" marker; Shorts are left out
+- Per-channel auto summarize: new videos are summarized into notes once a day has passed since upload
 - English, Korean, and Japanese UI, with a separate summary language setting
 - Open the note right after a summary, per-stage progress in the feed, and a stop button for bulk runs
 - Sidebar status panel: current AI provider and model, feed status, group and channel counts, and the channel list
@@ -66,7 +67,21 @@ Click the YouTube icon in the left ribbon, or run **Open sidebar** from the comm
 
 ### Subscription feed tab
 
-Add a YouTube Data API key and channels in settings to see each channel's latest videos, organized by group. Click a video title to open it on YouTube, or click **Summarize** to summarize it with the progress stage shown on the item. Summarized videos are marked as complete, and you can click the marker to open a note created in the current session. If the channels cannot be loaded, the reason (such as an invalid API key) is shown.
+Add a YouTube Data API key and channels in settings to see each channel's latest videos, organized by group. Click a video title to open it on YouTube, or click **Summarize** to summarize it with the progress stage shown on the item. Summarized videos are marked as complete, and you can click the marker to open a note created in the current session. If the channels cannot be loaded, the reason (such as an invalid API key) is shown. Shorts are not listed; only regular videos count toward the per-channel number.
+
+### Auto summarize
+
+Turn on **Auto summarize** for a channel under Settings → Monitored channels to have its new videos summarized into notes without clicking anything.
+
+- **Which videos**: regular videos (no Shorts) uploaded after you turned the toggle on, and not summarized yet. Videos that were already up when you turned it on are left alone.
+- **When**: once at least one day has passed since upload. The wait gives YouTube time to generate automatic captions.
+- **How often**: the plugin checks the channels once a day, while Obsidian is open. Restarting Obsidian does not trigger another check on the same day. Because of the daily check, a note can appear up to about two days after upload.
+- **Captions still missing**: this is not treated as a failure. The video is tried again at the next daily check, with no notice.
+- **Model errors**: if the AI provider fails after the request was sent, you get a notice and the video is not retried automatically until Obsidian restarts, so a failing video does not keep costing money. Summarize it from the feed to retry by hand.
+- **Where**: notes go to the channel's save folder, or the subscription save folder if none is set. A notice appears for each note created.
+- **Limit**: only the latest videos in the feed (the per-channel number, 1–10) are considered, so a channel that uploads more than that within a day can have videos skipped.
+
+Auto summarize sends captions to your AI provider and uses its paid quota without asking each time. Each daily check also uses two YouTube Data API quota units per channel.
 
 ## Model settings
 
@@ -134,7 +149,7 @@ Keys that an earlier build saved in `data.json` as plain text are moved to secre
 
 ## Network use and access outside the vault
 
-- **Network**: The plugin sends requests to YouTube to fetch captions and to the AI provider you select (Amazon Bedrock, OpenAI or the compatible server you configure, Anthropic, Google Gemini) to translate and summarize. The subscription feed also calls the YouTube Data API. The caption text is sent to the selected AI provider.
+- **Network**: The plugin sends requests to YouTube to fetch captions and to the AI provider you select (Amazon Bedrock, OpenAI or the compatible server you configure, Anthropic, Google Gemini) to translate and summarize. The subscription feed also calls the YouTube Data API. The caption text is sent to the selected AI provider. These requests happen only when you start a summary or open the feed, except for channels where you turned on auto summarize: those are checked once a day and their new videos are summarized automatically.
 - **Accounts and fees**: You need an account and an API key (or AWS credentials) for the AI provider, and the provider may charge for usage. The plugin itself is free.
 - **Files outside the vault**: Only when an AWS profile is set for Bedrock (desktop), the AWS SDK reads `~/.aws/config`, `~/.aws/credentials`, and the SSO cache, and runs the profile's `credential_process` command (for example `aws_signing_helper`) if it has one. With the profile left empty, the plugin does not access files outside the vault.
 - **Sponsor link**: The bottom of the settings screen has a Buy Me a Coffee link. It loads no remote image and opens in your browser only when you click it.
@@ -166,7 +181,8 @@ Caption collection depends on YouTube's public player response, so it can be aff
 | YouTube Data API key | For adding channels and the latest-video feed. Not needed to summarize a URL directly |
 | Save folder / Subscription save folder | Where regular and feed summaries are saved |
 | Channel save folder / Group | Per-channel save location and feed group |
-| Videos per channel | The latest 1–10 videos |
+| Videos per channel | The latest 1–10 videos, not counting Shorts |
+| Auto summarize (per channel) | Off by default. Summarizes the channel's new videos one day after upload; checked once a day |
 
 The input character count is not a token count, so set it to fit your model's context window. If a translation or summary response is cut off by the output limit, no note is saved. Each model request waits up to 3 minutes; Obsidian's `requestUrl` has no network cancellation API, so the provider may still finish processing after a timeout.
 

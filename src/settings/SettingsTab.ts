@@ -509,7 +509,7 @@ export class SettingsTab extends PluginSettingTab {
     ];
   }
 
-  /** 모니터링 채널마다 채널명 + 그룹 입력 + 삭제 버튼, 그리고 채널별 저장 폴더 */
+  /** 모니터링 채널마다 채널명 + 그룹 입력 + 삭제 버튼, 자동 요약 토글, 채널별 저장 폴더 */
   private channelDefinitions(tr: ReturnType<typeof t>): SettingDefinition[] {
     const findChannel = (channelId: string): MonitoredChannel | undefined =>
       this.plugin.settings.monitoredChannels.find((ch) => ch.channelId === channelId);
@@ -540,6 +540,23 @@ export class SettingsTab extends PluginSettingTab {
                   await this.removeChannel(channel.channelId);
                 });
             });
+        },
+      },
+      {
+        name: tr.channelAutoSummaryLabel,
+        desc: tr.channelAutoSummaryDesc,
+        render: (setting) => {
+          setting.addToggle((toggle) => {
+            toggle
+              .setValue(Boolean(channel.autoSummarizeSince))
+              .onChange(async (isEnabled: boolean) => {
+                const target = findChannel(channel.channelId);
+                if (!target) return;
+                // 켠 시각을 기록해 그 이후 올라온 영상만 자동 요약한다 (기존 영상 일괄 요약 방지)
+                target.autoSummarizeSince = isEnabled ? new Date().toISOString() : undefined;
+                await this.plugin.saveSettings();
+              });
+          });
         },
       },
       {

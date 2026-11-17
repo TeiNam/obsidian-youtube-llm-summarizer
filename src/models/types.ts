@@ -98,6 +98,8 @@ export interface PluginSettings {
 
   /** 모니터링 대상 채널 목록 */
   monitoredChannels: MonitoredChannel[];
+  /** 자동 요약이 채널을 마지막으로 점검한 시각(ISO 8601). 하루에 한 번만 점검하는 데 쓴다 */
+  autoSummaryCheckedAt: string;
   /** 구독 영상 요약 저장 폴더 경로 */
   subscriptionSaveFolderPath: string;
   /** 채널당 가져올 최신 영상 개수 (기본값: 6, 범위: 1~10) */
@@ -196,6 +198,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   maxOutputTokens: 65536,
   youtubeDataApiKey: "",
   monitoredChannels: [],
+  autoSummaryCheckedAt: "",
   subscriptionSaveFolderPath: "YouTube Subscriptions",
   videosPerChannel: 6,
   summarizedVideoIds: [],
@@ -220,6 +223,8 @@ export interface MonitoredChannel {
   saveFolderPath?: string;
   /** 그룹명 (미설정 시 그룹 없음으로 분류, 예: "주식", "스터디") */
   group?: string;
+  /** 자동 요약을 켠 시각(ISO 8601). 값이 있으면 켜진 상태이고, 이 시각 이후 올라온 영상만 자동 요약한다 */
+  autoSummarizeSince?: string;
 }
 
 /**
