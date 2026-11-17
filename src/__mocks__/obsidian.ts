@@ -237,6 +237,7 @@ export class Workspace {
     return new WorkspaceLeaf();
   }
   revealLeaf(_leaf: WorkspaceLeaf): void {}
+  onLayoutReady(_callback: () => void): void {}
   getLeaf(_newLeaf?: boolean): WorkspaceLeaf {
     return new WorkspaceLeaf();
   }
@@ -273,6 +274,10 @@ export class Plugin {
   }
   addSettingTab(_tab: any): void {
     this._settingTabs.push(_tab);
+  }
+  registerInterval(id: number): number {
+    clearInterval(id);
+    return id;
   }
 }
 

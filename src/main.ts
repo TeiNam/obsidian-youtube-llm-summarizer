@@ -20,6 +20,7 @@ import { requestHttp } from "./services/http";
 import { migratePlaintextSecrets, resolveSecrets } from "./services/secrets";
 import { YouTubeDataApiClient } from "./services/YouTubeDataApiClient";
 import { SubscriptionManager } from "./services/SubscriptionManager";
+import { AutoSummarizer, AUTO_SUMMARY_TIMER_MS } from "./services/AutoSummarizer";
 
 /**
  * 유튜브 요약 플러그인 메인 클래스
@@ -39,17 +40,7 @@ export default class YouTubeSummarizerPlugin extends Plugin {
       (leaf: WorkspaceLeaf) => {
         const view = new SidebarView(leaf);
 
-        // 서비스 팩토리: 매 요약 시 최신 설정으로 서비스 인스턴스 생성
-        // saveFolderPath가 전달되면 해당 경로 사용 (채널별 폴더), 아니면 기본 폴더
-        const serviceFactory = (saveFolderPath?: string) => {
-          const settings = this.getResolvedSettings();
-          const noteCreator = new NoteCreator(this.app, saveFolderPath ?? settings.saveFolderPath);
-          // 프로필 실패로 Bearer 토큰을 쓰게 되면 조용히 넘어가지 않고 알린다.
-          const model = new AiModelClient(settings, requestHttp, () => {
-            new Notice(t(settings.language).noticeBearerFallback);
-          });
-          return new SummarizerService(settings, noteCreator, undefined, model);
-        };
+        const serviceFactory = (saveFolderPath?: string) => this.createSummarizerService(saveFolderPath);
 
         // 채널이나 API 키를 바꾼 뒤에도 뷰를 다시 열 필요가 없도록, 조회할 때마다 최신 설정으로 만든다.
         const subscriptionManager = {
@@ -90,6 +81,51 @@ export default class YouTubeSummarizerPlugin extends Plugin {
 
     // 설정 탭 추가
     this.addSettingTab(new SettingsTab(this.app, this));
+
+    // 자동 요약: 채널 점검은 하루에 한 번이다. 타이머는 점검할 때가 됐는지만 확인한다.
+    const autoSummarizer = new AutoSummarizer({
+      getSettings: () => this.getResolvedSettings(),
+      fetchVideos: async (settings) => {
+        const manager = new SubscriptionManager(new YouTubeDataApiClient(settings.youtubeDataApiKey), settings);
+        const videos = await manager.fetchNewVideos();
+        // 오프라인처럼 한 채널도 조회하지 못했으면 점검한 것으로 치지 않고 다음 타이머 때 다시 시도한다.
+        if (!videos.length && manager.lastFetchError) {
+          const cause = manager.lastFetchError;
+          throw cause instanceof Error ? cause : new Error("Failed to fetch channel videos");
+        }
+        return videos;
+      },
+      createService: (saveFolderPath) => this.createSummarizerService(saveFolderPath),
+      markSummarized: (videoId) => this.markVideoSummarized(videoId),
+      markChecked: async (checkedAt) => {
+        this.settings = { ...this.settings, autoSummaryCheckedAt: checkedAt };
+        await this.saveData(this.settings);
+      },
+      notify: (message) => {
+        new Notice(message);
+      },
+    });
+    const runAutoSummary = (): void => {
+      autoSummarizer.run().catch((error: unknown) => {
+        console.error("YouTube LLM Summarizer: auto summary failed", error);
+      });
+    };
+    this.app.workspace.onLayoutReady(runAutoSummary);
+    this.registerInterval(window.setInterval(runAutoSummary, AUTO_SUMMARY_TIMER_MS));
+  }
+
+  /**
+   * 매 요약마다 최신 설정으로 서비스 인스턴스를 만든다.
+   * saveFolderPath가 전달되면 해당 경로 사용 (채널별 폴더), 아니면 기본 폴더
+   */
+  createSummarizerService(saveFolderPath?: string): SummarizerService {
+    const settings = this.getResolvedSettings();
+    const noteCreator = new NoteCreator(this.app, saveFolderPath ?? settings.saveFolderPath);
+    // 프로필 실패로 Bearer 토큰을 쓰게 되면 조용히 넘어가지 않고 알린다.
+    const model = new AiModelClient(settings, requestHttp, () => {
+      new Notice(t(settings.language).noticeBearerFallback);
+    });
+    return new SummarizerService(settings, noteCreator, undefined, model);
   }
 
   onunload(): void {

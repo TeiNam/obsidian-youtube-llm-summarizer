@@ -184,11 +184,17 @@ export interface Translations {
 
   // 피드 페이지네이션
   feedShowMore: string;
+
+  // 채널 자동 요약
+  channelAutoSummaryLabel: string;
+  channelAutoSummaryDesc: string;
+  noticeAutoSummarized: (title: string) => string;
+  noticeAutoSummaryFailed: (title: string, reason: string) => string;
 }
 
 /** 영어 번역 */
 const en: Translations = {
-  settingsDescription: "Turns YouTube captions into structured study notes. Captions are fetched from YouTube and sent directly to the AI provider you select below; nothing is sent until you start a summary.",
+  settingsDescription: "Turns YouTube captions into structured study notes. Captions are fetched from YouTube and sent directly to the AI provider you select below; nothing is sent until you start a summary or turn on auto summarize for a channel.",
   sponsorLabel: "If you find this plugin useful, consider supporting its development.",
 
   languageLabel: "Language",
@@ -347,11 +353,17 @@ const en: Translations = {
 
   // 피드 페이지네이션
   feedShowMore: "Show more",
+
+  // 채널 자동 요약
+  channelAutoSummaryLabel: "Auto summarize",
+  channelAutoSummaryDesc: "Checks this channel once a day and summarizes new videos into notes once a day has passed since upload, giving YouTube time to generate captions. A video whose captions are still missing is tried again the next day. Only regular videos uploaded after you turn this on are included. Runs while Obsidian is open and uses your AI provider.",
+  noticeAutoSummarized: (title) => `Auto summary created: ${title}`,
+  noticeAutoSummaryFailed: (title, reason) => `Auto summary failed: ${title}\n${reason}`,
 };
 
 /** 한국어 번역 */
 const ko: Translations = {
-  settingsDescription: "유튜브 자막을 구조화된 공부 노트로 만들어 줍니다. 자막은 유튜브에서 가져와 아래에서 선택한 AI 제공자에게 직접 보내며, 요약을 시작하기 전에는 아무것도 전송하지 않습니다.",
+  settingsDescription: "유튜브 자막을 구조화된 공부 노트로 만들어 줍니다. 자막은 유튜브에서 가져와 아래에서 선택한 AI 제공자에게 직접 보내며, 요약을 시작하거나 채널의 자동 요약을 켜기 전에는 아무것도 전송하지 않습니다.",
   sponsorLabel: "이 플러그인이 유용하다면 개발을 후원해 주세요.",
 
   languageLabel: "언어 (Language)",
@@ -510,11 +522,17 @@ const ko: Translations = {
 
   // 피드 페이지네이션
   feedShowMore: "더 보기",
+
+  // 채널 자동 요약
+  channelAutoSummaryLabel: "자동 요약",
+  channelAutoSummaryDesc: "하루에 한 번 이 채널을 점검해, 업로드 후 하루가 지난(자막이 만들어질 시간을 둔) 새 영상을 자동으로 요약해 노트로 만듭니다. 자막이 아직 없으면 다음 날 다시 시도합니다. 이 설정을 켠 뒤에 올라온 일반 영상만 대상입니다. Obsidian이 열려 있는 동안 동작하며 AI 제공자 요금이 발생합니다.",
+  noticeAutoSummarized: (title) => `자동 요약 완료: ${title}`,
+  noticeAutoSummaryFailed: (title, reason) => `자동 요약 실패: ${title}\n${reason}`,
 };
 
 /** 일본어 번역 */
 const ja: Translations = {
-  settingsDescription: "YouTubeの字幕を構造化された学習ノートにまとめます。字幕はYouTubeから取得し、下で選択したAIプロバイダーに直接送信します。要約を開始するまでは何も送信しません。",
+  settingsDescription: "YouTubeの字幕を構造化された学習ノートにまとめます。字幕はYouTubeから取得し、下で選択したAIプロバイダーに直接送信します。要約を開始するか、チャンネルの自動要約をオンにするまでは何も送信しません。",
   sponsorLabel: "このプラグインが役に立ったら、開発へのご支援をご検討ください。",
 
   languageLabel: "言語 (Language)",
@@ -673,6 +691,12 @@ const ja: Translations = {
 
   // 피드 페이지네이션
   feedShowMore: "もっと見る",
+
+  // 채널 자동 요약
+  channelAutoSummaryLabel: "自動要約",
+  channelAutoSummaryDesc: "1日に1回このチャンネルを確認し、アップロードから1日経過した（字幕が生成されるのを待った）新しい動画を自動で要約してノートを作成します。字幕がまだない場合は翌日に再試行します。この設定をオンにした後に公開された通常の動画のみが対象です。Obsidianを開いている間に動作し、AIプロバイダーの料金が発生します。",
+  noticeAutoSummarized: (title) => `自動要約が完了しました: ${title}`,
+  noticeAutoSummaryFailed: (title, reason) => `自動要約に失敗しました: ${title}\n${reason}`,
 };
 
 /** 번역 맵 */

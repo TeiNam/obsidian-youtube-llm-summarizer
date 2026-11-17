@@ -33,6 +33,7 @@ const capturedButtonCallbacks: Array<() => Promise<void>> = [];
 const capturedSliderCallbacks: Array<(value: number) => Promise<void>> = [];
 const textByName = new Map<string, (value: string) => Promise<void>>();
 const dropdownByName = new Map<string, (value: string) => Promise<void>>();
+const toggleByName = new Map<string, (value: boolean) => Promise<void>>();
 const buttonByName = new Map<string, () => Promise<void>>();
 const suggestionsByName = new Map<string, {
   getSuggestions(input: string): string[];
@@ -115,6 +116,17 @@ vi.mock("obsidian", async (importOriginal) => {
       cb(button);
       return this;
     }
+    addToggle(cb: (toggle: any) => any): MockSetting {
+      const toggle = {
+        setValue: () => toggle,
+        onChange: (fn: (value: boolean) => Promise<void>) => {
+          toggleByName.set(this.name, fn);
+          return toggle;
+        },
+      };
+      cb(toggle);
+      return this;
+    }
     addSlider(cb: (slider: any) => any): MockSetting {
       const slider = {
         setLimits: () => slider,
@@ -174,6 +186,7 @@ describe("SettingsTab", () => {
     capturedSliderCallbacks.length = 0;
     textByName.clear();
     dropdownByName.clear();
+    toggleByName.clear();
     buttonByName.clear();
     suggestionsByName.clear();
     vi.mocked(listAvailableModels).mockReset();
@@ -590,6 +603,19 @@ describe("SettingsTab", () => {
       );
       expect(updatedChannel?.saveFolderPath).toBe("Custom Channel Folder");
       expect(mockPlugin.saveSettings).toHaveBeenCalled();
+    });
+
+    it("자동 요약 토글을 켜면 켠 시각을 기록하고 끄면 지운다", async () => {
+      settingsTab.update();
+      const before = Date.now();
+      await toggleByName.get(tr.channelAutoSummaryLabel)!(true);
+      const enabledAt = Date.parse(mockPlugin.settings.monitoredChannels[0].autoSummarizeSince ?? "");
+      expect(enabledAt).toBeGreaterThanOrEqual(before);
+      expect(enabledAt).toBeLessThanOrEqual(Date.now());
+
+      await toggleByName.get(tr.channelAutoSummaryLabel)!(false);
+      expect(mockPlugin.settings.monitoredChannels[0].autoSummarizeSince).toBeUndefined();
+      expect(mockPlugin.saveSettings).toHaveBeenCalledTimes(2);
     });
 
     it("채널 그룹 텍스트 입력 변경 시 group이 업데이트된다", async () => {

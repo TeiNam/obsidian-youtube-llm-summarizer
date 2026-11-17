@@ -35,6 +35,7 @@ function createMockApp() {
       getRightLeaf: vi.fn().mockReturnValue(null),
       revealLeaf: vi.fn(),
       getLeaf: vi.fn(),
+      onLayoutReady: vi.fn(),
     },
     secretStorage: createSecretStorage(),
   } as any;
@@ -47,6 +48,8 @@ describe("YouTubeSummarizerPlugin", () => {
     // @ts-expect-error - 테스트 환경에서 인자 없이 생성
     plugin = new YouTubeSummarizerPlugin();
     plugin.app = createMockApp();
+    // 노드 환경에는 window가 없다. 자동 요약 점검 타이머 등록만 확인한다.
+    vi.stubGlobal("window", { setInterval: vi.fn().mockReturnValue(7) });
     // 자동 목은 undefined를 돌려주므로, 앱 언어를 navigator.language로 흉내 낸다.
     vi.mocked(getLanguage).mockImplementation(() => globalThis.navigator?.language ?? "en");
   });
@@ -135,6 +138,11 @@ describe("YouTubeSummarizerPlugin", () => {
       const command = addCommandSpy.mock.calls[0][0];
       expect(command.id).toBe("open-sidebar");
       expect(command.hotkeys).toBeUndefined();
+
+      // 자동 요약: 레이아웃 준비 후와 1시간마다, 하루 한 번의 점검 때가 됐는지 확인한다.
+      expect(plugin.app.workspace.onLayoutReady).toHaveBeenCalledOnce();
+      expect(window.setInterval).toHaveBeenCalledWith(expect.any(Function), 60 * 60 * 1000);
+      expect(plugin.registerInterval).toHaveBeenCalledWith(7);
 
       expect(plugin.settings).toEqual(DEFAULT_SETTINGS);
       expect(registerViewSpy).toHaveBeenCalledWith(
