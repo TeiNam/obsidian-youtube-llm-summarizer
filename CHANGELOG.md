@@ -2,6 +2,13 @@
 
 Notable changes to this plugin. Versions match the release tags.
 
+## Unreleased
+
+### Changed
+
+- The channel list in the status panel of the URL summary tab is ordered by group, then by the order channels were added, with ungrouped channels last. This matches the subscription feed tab.
+- URL 요약 탭 현황 패널의 채널 목록을 그룹순, 그룹 안에서는 등록순으로 정렬하고 그룹 없는 채널은 맨 뒤에 둡니다. 구독 피드 탭과 같은 순서입니다.
+
 ## 1.1.0
 
 ### Added
