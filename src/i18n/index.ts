@@ -1,17 +1,18 @@
 // ============================================================
 // 다국어(i18n) 지원 모듈
-// 영어(en)와 한국어(ko)를 지원하며, 설정에서 언어를 변경할 수 있다
+// 영어(en)·한국어(ko)·일본어(ja)를 지원하며, 설정에서 언어를 변경할 수 있다
 // 로컬 자막 요약과 모델 설정의 안내 문구
 // ============================================================
 
 import { getLanguage } from "obsidian";
 
 /** 지원 언어 타입 */
-export type Language = "en" | "ko";
+export type Language = "en" | "ko" | "ja";
 
 /** 시스템 언어에서 지원 UI 언어를 감지한다 (첫 실행 초기값용) */
 export function detectLanguage(): Language {
-  return getLanguage().startsWith("ko") ? "ko" : "en";
+  const system = getLanguage();
+  return system.startsWith("ko") ? "ko" : system.startsWith("ja") ? "ja" : "en";
 }
 
 /** 번역 키 인터페이스 */
@@ -511,8 +512,171 @@ const ko: Translations = {
   feedShowMore: "더 보기",
 };
 
+/** 일본어 번역 */
+const ja: Translations = {
+  settingsDescription: "YouTubeの字幕を構造化された学習ノートにまとめます。字幕はYouTubeから取得し、下で選択したAIプロバイダーに直接送信します。要約を開始するまでは何も送信しません。",
+  sponsorLabel: "このプラグインが役に立ったら、開発へのご支援をご検討ください。",
+
+  languageLabel: "言語 (Language)",
+  toggleVisibilityAria: "表示を切り替え",
+  languageDesc: "プラグインUIの表示言語を選択します",
+
+  summaryLanguageLabel: "要約言語",
+  summaryLanguageDesc: "UI言語とは別に、翻訳文と要約ノートの言語を選択します",
+  providerLabel: "AIプロバイダー",
+  providerDesc: "選択したプロバイダーに字幕を送信して翻訳・要約します",
+  modelLabel: "モデルID",
+  modelDesc: "利用できるテキストモデルのIDを入力してください。Claude Sonnet系を推奨します（例: claude-sonnet-4-6）。Bedrockは推論プロファイルID/ARNにも対応しています",
+  modelManualOption: "手動で入力...",
+  connectionTestLabel: "接続テスト",
+  connectionTestDesc: "現在の設定で短いリクエストを送り、認証とモデルが動作するか確認します。トークンを少量消費します",
+  connectionTestButton: "テスト",
+  connectionTesting: "確認中...",
+  connectionOk: "接続に成功しました。",
+  connectionOkProfile: "AWSプロファイルで接続に成功しました。",
+  connectionOkBearer: "Bearerトークンで接続に成功しました。",
+  connectionOkFallback: "Bearerトークンで接続に成功しました。AWSプロファイルの認証情報は読み込めませんでした。",
+  noticeBearerFallback: "AWSプロファイルの認証情報を読み込めなかったため、Bedrock Bearerトークンで続行します。",
+  openNoteLink: "ノートを開く",
+  commandOpenSidebar: "サイドバーを開く",
+  infoProviderLabel: "AIプロバイダー",
+  infoModelLabel: "モデル",
+  infoNotSet: "未設定",
+  infoFeedLabel: "登録チャンネルフィード",
+  infoFeedReady: "利用可能",
+  infoFeedNeedsKey: "YouTube Data APIキーが必要",
+  infoFeedNoChannels: "追加されたチャンネルなし",
+  infoChannelsLabel: "登録チャンネル",
+  infoGroupsLabel: "グループ",
+  bulkCancelButton: "現在の動画が終わったら中止",
+  bulkSkipped: (count) => `YouTubeリンクではない${count}行をスキップしました。`,
+  bulkCancelled: (count) => `中止しました。残りのリンク${count}件は処理していません。`,
+  modelListButton: "モデルを読み込む",
+  modelListLoading: "読み込み中...",
+  modelListLoaded: (count) => `モデルを${count}件読み込みました。モデルIDの入力欄から選択してください。Bedrockの一覧は再読み込みするまで保存されます。`,
+  errorModelList: "モデル一覧を読み込めませんでした。認証情報・リージョン・ネットワークを確認してください。",
+  bedrockTokenLabel: "Bedrock Bearerトークン",
+  bedrockTokenDesc: "Bearerの接頭辞を付けずにBedrock APIキーを入力してください。AWSプロファイルが空のとき、認証情報を読み込めないとき、およびモバイルで使用します。プラグインのデータファイルではなく、このデバイスのシークレットストレージに保存します",
+  bedrockRegionLabel: "AWSリージョン",
+  bedrockRegionDesc: "選択したモデルまたは推論プロファイルを利用できるリージョンです",
+  bedrockProfileLabel: "AWSプロファイル",
+  bedrockProfileDesc: "任意、デスクトップ専用です。入力すると最初に試行し（IAM Roles Anywhereのcredential_process・SSO）、認証情報を読み込めない場合はBearerトークンに切り替えます。~/.aws/configのプロファイル名です。SSOの場合は先にターミナルで aws sso login --profile <プロファイル> を実行してください。SDKがキャッシュした認証情報を使用します",
+  modelApiKeyLabel: "モデルAPIキー",
+  modelApiKeyDesc: "プロバイダーごとに分けて、プラグインのデータファイルではなく、このデバイスのシークレットストレージに保存します。キーなしで使えるのはローカルのOpenAI互換サーバーのみです",
+  openaiBaseUrlLabel: "OpenAI互換ベースURL",
+  openaiBaseUrlDesc: "/v1まで入力してください。例: https://api.openai.com/v1、http://localhost:11434/v1 (Ollama)。URLを変更すると、このプロバイダーのキーが新しいアドレスに送信されます",
+  maxInputCharsLabel: "最大入力文字数",
+  maxInputCharsDesc: "字幕と翻訳文の上限です（1,000〜1,000,000文字）。超えるとエラーで停止し、後半を勝手に切り捨てることはありません",
+  maxOutputTokensLabel: "1回の呼び出しあたりの最大出力トークン",
+  maxOutputTokensDesc: "モデルの出力上限以内で設定してください（128〜128,000）。長い翻訳は分割して処理します。応答が途中で切れる場合はこの値を増やしてください",
+  errorMissingModel: "設定でモデルIDを入力してください。",
+  errorDesktopProfile: "AWSプロファイル・SSO認証はObsidianデスクトップ版で利用できます。モバイルではBearerトークンを入力してください。",
+  errorProfileRuntime: "AWSプロファイル認証にはNode.js 20以降のObsidianランタイムが必要です。Obsidianデスクトップのインストーラーを更新するか、Bearerトークンを使用してください。",
+  errorInvalidRegion: "設定で正しいAWSリージョンを入力してください。",
+  errorInvalidBaseUrl: "認証情報・クエリ・フラグメントを含まないHTTPSのベースURLを入力してください。HTTPはlocalhostのみ使用できます。",
+  errorInvalidLimits: "入力文字数（1,000〜1,000,000）と出力トークン（128〜128,000）を範囲内の整数で設定してください。",
+  errorNoCaptions: "利用できる字幕がまだありません。YouTubeで字幕が生成されてから再試行するか、スクリプトを直接入力してください。自動字幕が1日以内に生成される保証はありません。",
+  errorCaptionAccess: "YouTubeから字幕を取得できません（アクセス制限・ログイン・リクエスト制限）。しばらくしてから再試行するか、スクリプトを直接入力してください。",
+  errorCaptionFormat: "YouTubeの字幕応答を読み取れませんでした。しばらくしてから再試行するか、スクリプトを直接入力してください。",
+  errorCaptionIncomplete: "動画の長さに対して字幕が短すぎるため、不完全な可能性があります。後で再試行するか、スクリプト全文を直接入力してください。",
+  errorCaptionsTimeout: "YouTubeへのリクエストがタイムアウトしました。後で再試行するか、スクリプトを直接入力してください。",
+  errorModelTimeout: "モデルへのリクエストがタイムアウトしました。ノートは保存していません。",
+  errorModelTruncated: "モデルの応答が出力上限で途中で切れました。モデルが対応する範囲で出力トークンを増やすか、短い字幕で再試行してください。ノートは保存していません。",
+  errorModelEmpty: "モデルがテキストを返しませんでした。モデルと出力トークンの設定を確認してください。",
+  errorModelBlocked: "モデルがリクエストを完了できませんでした（フィルター・応答拒否・未対応の応答）。ノートは保存していません。",
+  errorSummaryFormat: "モデルの要約にDETAILEDセクションがありません。再試行するか、出力形式に従えるモデルを選択してください。",
+  errorInputTooLong: "字幕または翻訳文が入力文字数の上限を超えました。モデルのコンテキスト上限の範囲で上限を増やすか、短い字幕を入力してください。後半を勝手に切り捨ててはいません。",
+  errorModelRequest: "モデルの呼び出しに失敗しました。認証情報、モデルID、アドレス・リージョン、プロバイダーの割り当てを確認してください。",
+  errorProfileCredentials: "AWSプロファイルの認証情報を読み込めませんでした。プロファイルを確認し、SSOの場合は aws sso login --profile <プロファイル> で再度ログインしてください。",
+
+  saveFolderLabel: "ノートの保存フォルダ",
+  saveFolderDesc: "要約ノートを保存するフォルダのパスです",
+
+  sidebarTitle: "YouTube LLM Summarizer",
+  urlPlaceholder: "YouTubeリンクを入力してください",
+  summarizeButton: "要約",
+  summarizingButton: "要約中...",
+
+  stageValidating: "URLを検証中...",
+  stagePending: "待機中...",
+  stageExtracting: "字幕を抽出中...",
+  stageTranslating: "翻訳中...",
+  stageSummarizing: "要約を生成中...",
+  stageCreatingNote: "ノートを作成中...",
+  stageComplete: "要約が完了しました",
+
+  errorEmptyUrl: "YouTubeリンクを入力してください",
+  errorInvalidUrl: "有効なYouTubeリンクを入力してください",
+  errorNotInitialized: "プラグインが正しく初期化されていません。",
+  errorSummarizeFailed: "要約の生成に失敗しました。もう一度お試しください",
+  errorMissingApiKey: "設定で、選択したAIプロバイダーのAPIキーまたはAWSプロファイルを入力してください。",
+  noticeSummaryComplete: "要約が完了しました",
+
+  // 구독 피드 설정
+  youtubeDataApiKeyLabel: "YouTube Data APIキー",
+  youtubeDataApiKeyDesc: "Google Cloud Console → プロジェクトを作成 → YouTube Data API v3を有効化 → 認証情報 → APIキーを作成",
+  addChannelLabel: "チャンネルを追加",
+  addChannelDesc: "YouTubeチャンネルのハンドル（例: @sosumonkey）またはチャンネルID（例: UCxxxx）を入力してください",
+  addChannelButton: "追加",
+  addingChannel: "追加中...",
+  removeChannelButton: "削除",
+  subscriptionChannelsLabel: "監視チャンネル一覧",
+  subscriptionSaveFolderLabel: "登録チャンネル要約の保存フォルダ",
+  subscriptionSaveFolderDesc: "登録チャンネルの要約ノートを保存するフォルダのパスです",
+  subscriptionSectionHeader: "YouTube登録チャンネルフィード",
+  errorChannelNotFound: "チャンネルが見つかりません。チャンネルのハンドルまたはIDを確認してください",
+
+  // 사이드바 탭
+  tabUrlSummary: "URL要約",
+  tabSubscriptionFeed: "登録チャンネルフィード",
+
+  // 피드 뷰
+  feedRefreshButton: "更新",
+  feedLoading: "フィードを読み込み中...",
+  feedEmpty: "新しい動画はありません",
+  feedNoChannels: "チャンネルがまだありません。設定 → YouTube LLM Summarizer → 監視チャンネル一覧から追加してください。",
+  feedSummarizeButton: "要約する",
+  feedSummarizing: "要約中...",
+  feedSummarized: "要約完了",
+  feedSummaryError: "要約失敗",
+
+  // 구독 피드 오류 메시지
+  errorInvalidYoutubeDataApiKey: "YouTube Data APIキーが無効です。設定を確認してください",
+  errorNetworkConnection: "ネットワーク接続を確認してください",
+  errorFetchSubscriptions: "登録チャンネルの取得に失敗しました。もう一度お試しください",
+
+  // 채널별 저장 폴더
+  channelSaveFolderLabel: "チャンネル別の保存フォルダ",
+  channelSaveFolderDesc: "このチャンネルの要約ノートの保存フォルダを選択してください（デフォルトのままなら共通フォルダを使用）",
+  channelSaveFolderDefault: "デフォルトのフォルダを使用",
+
+  // 채널당 영상 개수 설정
+  videosPerChannelLabel: "チャンネルあたりの動画数",
+  videosPerChannelDesc: "チャンネルごとに表示する最新動画の数（1〜10）",
+
+  // 스크립트 직접 입력
+  scriptLabel: "スクリプト / 字幕",
+  scriptPlaceholder: "動画のスクリプトまたは字幕をここに貼り付けてください（任意）",
+  scriptHint: "入力すると、自動抽出の代わりにこのテキストを使って要約します。",
+
+  bulkLabel: "まとめて要約（複数リンク）",
+  bulkPlaceholder: "1行にYouTubeリンクを1つずつ",
+  bulkHint: "上から順に1件ずつ要約します。無効な行はスキップします。",
+  bulkButton: "すべて要約",
+  bulkProgress: (done, total) => `処理中 ${done}/${total}...`,
+  bulkDone: (ok, fail) => `完了: 成功 ${ok}件、失敗 ${fail}件`,
+
+  // 채널 그룹
+  channelGroupLabel: "グループ",
+  channelGroupDesc: "このチャンネルをグループ名でまとめます（例: 株式、勉強）。空欄ならグループなし。",
+  feedUngrouped: "グループなし",
+
+  // 피드 페이지네이션
+  feedShowMore: "もっと見る",
+};
+
 /** 번역 맵 */
-const translations: Record<Language, Translations> = { en, ko };
+const translations: Record<Language, Translations> = { en, ko, ja };
 
 /**
  * 지정된 언어의 번역 객체를 반환
