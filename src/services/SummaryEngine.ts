@@ -8,6 +8,7 @@ import {
 } from "../models/types";
 import { AiModelClient } from "./AiModelClient";
 import { isSameTranscriptLanguage } from "../utils/TranscriptLanguage";
+import { summaryLabels } from "./summaryLabels";
 
 /** 서버와 동일한 단일 패스 치환. 자막 속 {{TEXT}} 등을 다시 치환하지 않는다. */
 export function renderPrompt(template: string, values: Record<string, string>): string {
@@ -31,7 +32,7 @@ export function splitTranscript(text: string, limit: number): string[] {
   return chunks;
 }
 
-/** ../youtube_summarizer의 구분자·목록 파싱과 노트 조립 형식을 유지한다. 라벨은 ko만 한국어, 그 외 언어는 영어. */
+/** ../youtube_summarizer의 구분자·목록 파싱과 노트 조립 형식을 유지한다. 라벨은 summaryLabels 표를 따른다. */
 export function parseSummary(text: string, language: SummaryLanguage = "ko"): Pick<NoteContent, "summary" | "keyPoints"> {
   const parts = text.replace(/\r\n?/g, "\n").split(/^===[ \t]*([A-Z_]+)[ \t]*===[ \t]*$/m);
   const sections: Record<string, string> = {};
@@ -40,13 +41,14 @@ export function parseSummary(text: string, language: SummaryLanguage = "ko"): Pi
   if (!sections.DETAILED) throw new Error(t(korean ? "ko" : "en").errorSummaryFormat);
   const genre = ["NEWS", "LECTURE", "TECH", "BUSINESS", "FINANCE", "OTHER"]
     .find((name) => (sections.GENRE ?? "").toUpperCase().includes(name)) ?? "OTHER";
+  const labels = summaryLabels(language);
   const summary = [
-    `🏷️ ${korean ? "장르" : "Genre"}: ${genre}`,
-    `\n📌 ${korean ? "한줄 요약" : "One-line summary"}\n${sections.ONE_LINE ?? ""}`,
-    `\n📋 ${korean ? "핵심 내용" : "Details"}\n${sections.DETAILED}`,
+    `🏷️ ${labels.genre}: ${genre}`,
+    `\n📌 ${labels.oneLine}\n${sections.ONE_LINE ?? ""}`,
+    `\n📋 ${labels.details}\n${sections.DETAILED}`,
   ];
-  if (sections.KEYWORDS) summary.push(`\n🔑 ${korean ? "키워드 & 용어" : "Keywords & terms"}\n${sections.KEYWORDS}`);
-  if (sections.FURTHER) summary.push(`\n❓ ${korean ? "추가 탐색 주제" : "Further exploration"}\n${sections.FURTHER}`);
+  if (sections.KEYWORDS) summary.push(`\n🔑 ${labels.keywords}\n${sections.KEYWORDS}`);
+  if (sections.FURTHER) summary.push(`\n❓ ${labels.further}\n${sections.FURTHER}`);
 
   const items: string[] = [];
   for (const raw of (sections.INSIGHTS ?? "").split("\n")) {

@@ -296,6 +296,13 @@ describe("로컬 자막 요약", () => {
     for (let i = 1; i <= chunks.length; i++) expect(summaryPrompt).toContain(`번역 청크 ${i}`);
   });
 
+  it.each([
+    ["ko", "📌 한줄 요약"], ["ja", "📌 一行要約"], ["zh-CN", "📌 一句话总结"],
+    ["zh-TW", "📌 一句話總結"], ["fr", "📌 One-line summary"],
+  ] as const)("%s 요약의 고정 제목은 라벨 표를 따른다", (language, heading) => {
+    expect(parseSummary(SUMMARY, language).summary).toContain(heading);
+  });
+
   it("번역문 길이 초과와 요약 형식 오류를 성공으로 처리하지 않는다", async () => {
     const generate = vi.fn().mockResolvedValue("a".repeat(1001));
     const engine = new SummaryEngine({ generate }, { ...SETTINGS, maxInputChars: 1000 });
@@ -534,7 +541,7 @@ describe("listAvailableModels", () => {
 });
 
 describe("SummaryEngine - 다국어 타겟", () => {
-  it("비한국어 타겟은 범용 번역 템플릿과 출력 언어 지시를 사용하고 영어 라벨로 조립한다", async () => {
+  it("비한국어 타겟은 범용 번역 템플릿과 출력 언어 지시를 사용하고 타겟 언어 라벨로 조립한다", async () => {
     const generate = vi.fn<(prompt: string) => Promise<string>>()
       .mockResolvedValueOnce("日本語訳")
       .mockResolvedValueOnce(SUMMARY);
@@ -545,7 +552,7 @@ describe("SummaryEngine - 다국어 타겟", () => {
     expect(translatePrompt).toContain("Japanese로 번역");
     expect(translatePrompt).not.toContain("한국인이 쓴");
     expect(summaryPrompt).toContain("출력 언어: Japanese");
-    expect(result.summary).toContain("Genre: LECTURE");
+    expect(result.summary).toContain("ジャンル: LECTURE");
   });
 
   it("한국어 타겟은 기존 한국어 번역 원칙 템플릿을 유지한다", async () => {
