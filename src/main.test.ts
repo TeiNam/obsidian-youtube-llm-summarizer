@@ -96,8 +96,8 @@ describe("YouTubeSummarizerPlugin", () => {
       expect(plugin.settings.language).toBe("ko");
     });
 
-    it("첫 실행 시 시스템 언어가 한국어가 아니면 en을 사용한다", async () => {
-      vi.stubGlobal("navigator", { language: "ja-JP" });
+    it("첫 실행 시 시스템 언어가 지원하지 않는 언어면 en을 사용한다", async () => {
+      vi.stubGlobal("navigator", { language: "fr-FR" });
       vi.spyOn(plugin, "loadData").mockResolvedValue(null);
       await plugin.loadSettings();
       expect(plugin.settings.language).toBe("en");

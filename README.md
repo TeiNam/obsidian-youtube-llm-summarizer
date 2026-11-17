@@ -28,7 +28,7 @@ It works without a separate summary server, Python, yt-dlp, audio downloads, or 
 - Chunked translation for long captions, with input limits and truncation checks
 - Sequential bulk summaries that keep failed links for retry
 - Subscription feed with channel groups, per-channel save folders, and a "summarized" marker
-- English and Korean UI, with a separate summary language setting
+- English, Korean, and Japanese UI, with a separate summary language setting
 - Open the note right after a summary, per-stage progress in the feed, and a stop button for bulk runs
 - Sidebar status panel: current AI provider and model, feed status, group and channel counts, and the channel list
 - API keys kept in Obsidian's secret storage instead of the plugin data file; settings are searchable from Obsidian's settings search

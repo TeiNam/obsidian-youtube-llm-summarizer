@@ -4,9 +4,9 @@
 // 구독 피드 관련 키 완전성을 검증
 // ============================================================
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import * as fc from "fast-check";
-import { t } from "./index";
+import { detectLanguage, t } from "./index";
 import type { Translations } from "./index";
 
 /**
@@ -137,4 +137,25 @@ describe("Feature: per-channel-save-folder, Property 4: 번역 키 완전성", (
       { numRuns: 100 } // 최소 100회 반복
     );
   });
+});
+
+describe("일본어 UI", () => {
+  it("영어와 같은 키를 같은 타입의 비어있지 않은 값으로 갖는다", () => {
+    const english = t("en") as unknown as Record<string, unknown>;
+    const japanese = t("ja") as unknown as Record<string, unknown>;
+    expect(Object.keys(japanese).sort()).toEqual(Object.keys(english).sort());
+    for (const [key, value] of Object.entries(japanese)) {
+      expect(typeof value, key).toBe(typeof english[key]);
+      if (typeof value === "string") expect(value.trim(), key).not.toBe("");
+    }
+  });
+
+  it.each([["ja", "ja"], ["ja-JP", "ja"], ["ko-KR", "ko"], ["fr", "en"]])(
+    "시스템 언어 %s 는 %s UI로 시작한다",
+    (system, expected) => {
+      vi.stubGlobal("navigator", { language: system });
+      expect(detectLanguage()).toBe(expected);
+      vi.unstubAllGlobals();
+    }
+  );
 });

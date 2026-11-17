@@ -108,6 +108,7 @@ export class SettingsTab extends PluginSettingTab {
           setting.addDropdown((dropdown) => {
             dropdown.addOption("en", "English");
             dropdown.addOption("ko", "한국어");
+            dropdown.addOption("ja", "日本語");
             dropdown
               .setValue(settings.language ?? "en")
               .onChange(async (value: string) => {

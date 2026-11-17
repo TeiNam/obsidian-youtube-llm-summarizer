@@ -4,6 +4,11 @@ Notable changes to this plugin. Versions match the release tags.
 
 ## Unreleased
 
+### Added
+
+- Japanese UI language. Pick 日本語 under Settings → Language; a first run on a Japanese-language Obsidian selects it automatically.
+- UI 언어에 일본어를 추가했습니다. 설정의 언어에서 日本語를 고르며, Obsidian 언어가 일본어면 첫 실행 때 자동으로 선택됩니다.
+
 ### Changed
 
 - Notes summarized in Japanese, Simplified Chinese, or Traditional Chinese now use section headings in that language (Summary, Key insights, Genre, One-line summary, Details, Keywords & terms, Further exploration). They were English before. Other non-Korean languages keep English headings. (#12)
