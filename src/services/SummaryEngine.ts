@@ -1,7 +1,7 @@
 import summaryTemplate from "../prompts/summarize.md?raw";
 import translationTemplate from "../prompts/translate.md?raw";
 import genericTranslationTemplate from "../prompts/translate-any.md?raw";
-import { t } from "../i18n";
+import { Language, t } from "../i18n";
 import {
   NoteContent, PluginSettings, ProgressCallback,
   SUMMARY_LANGUAGES, SummaryLanguage, SummaryStage,
@@ -33,12 +33,16 @@ export function splitTranscript(text: string, limit: number): string[] {
 }
 
 /** ../youtube_summarizer의 구분자·목록 파싱과 노트 조립 형식을 유지한다. 라벨은 summaryLabels 표를 따른다. */
-export function parseSummary(text: string, language: SummaryLanguage = "ko"): Pick<NoteContent, "summary" | "keyPoints"> {
+export function parseSummary(
+  text: string,
+  language: SummaryLanguage = "ko",
+  uiLanguage: Language = "ko"
+): Pick<NoteContent, "summary" | "keyPoints"> {
   const parts = text.replace(/\r\n?/g, "\n").split(/^===[ \t]*([A-Z_]+)[ \t]*===[ \t]*$/m);
   const sections: Record<string, string> = {};
   for (let i = 1; i + 1 < parts.length; i += 2) sections[parts[i]] = parts[i + 1].trim();
-  const korean = language === "ko";
-  if (!sections.DETAILED) throw new Error(t(korean ? "ko" : "en").errorSummaryFormat);
+  // 오류는 사용자가 읽는 것이므로 요약 언어가 아니라 UI 언어로 낸다
+  if (!sections.DETAILED) throw new Error(t(uiLanguage).errorSummaryFormat);
   const genre = ["NEWS", "LECTURE", "TECH", "BUSINESS", "FINANCE", "OTHER"]
     .find((name) => (sections.GENRE ?? "").toUpperCase().includes(name)) ?? "OTHER";
   const labels = summaryLabels(language);
@@ -97,7 +101,7 @@ export class SummaryEngine {
     if (!korean) {
       prompt += `\n\n출력 언어: ${languageName}. 모든 섹션의 본문을 해당 언어로 작성하세요. 한국어 문법 지침은 적용하지 말고 ===NAME=== 구분자는 유지하세요.`;
     }
-    return parseSummary(await this.model.generate(prompt), targetLanguage);
+    return parseSummary(await this.model.generate(prompt), targetLanguage, this.settings.language);
   }
 
   private checkLength(text: string): void {

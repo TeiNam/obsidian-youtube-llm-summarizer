@@ -309,6 +309,8 @@ describe("로컬 자막 요약", () => {
     await expect(engine.summarize("원문", "ko", vi.fn())).rejects.toThrow(t("ko").errorInputTooLong);
     expect(generate).toHaveBeenCalledOnce();
     expect(() => parseSummary("요약 형식을 따르지 않은 응답")).toThrow(t("ko").errorSummaryFormat);
+    // 요약 언어가 영어여도 오류는 UI 언어(일본어)로 나온다
+    expect(() => parseSummary("형식 오류", "en", "ja")).toThrow(t("ja").errorSummaryFormat);
     expect(parseSummary(SUMMARY.replace(/\n/g, "\r\n")).keyPoints).toEqual([
       "첫째 인사이트. 근거가 이어진다.", "2026. 하반기에는 공급이 늘어난다.",
     ]);
